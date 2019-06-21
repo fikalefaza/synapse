@@ -65,13 +65,18 @@ class TrustedKeyServer(object):
 
 
 class KeyConfig(Config):
-    def read_config(self, config, **kwargs):
+    def read_config(self, config, config_dir_path, **kwargs):
         # the signing key can be specified inline or in a separate file
         if "signing_key" in config:
             self.signing_key = read_signing_keys([config["signing_key"]])
         else:
-            self.signing_key_path = config["signing_key_path"]
-            self.signing_key = self.read_signing_key(self.signing_key_path)
+            signing_key_path = config.get("signing_key_path")
+            if signing_key_path is None:
+                signing_key_path = os.path.join(
+                    config_dir_path, config["server_name"] + ".signing.key"
+                )
+
+            self.signing_key = self.read_signing_key(signing_key_path)
 
         self.old_signing_keys = self.read_old_signing_keys(
             config.get("old_signing_keys", {})
